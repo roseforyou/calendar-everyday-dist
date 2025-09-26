@@ -1,0 +1,34 @@
+name: Chrome Extension Release
+
+on:
+  push:
+    # 只有当你推送一个形如 'v1.0.0' 的标签时，才会触发此工作流
+    tags:
+      - 'v*'
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write 
+
+    steps:
+      - name: Checkout code # 步骤 1: 获取代码
+        uses: actions/checkout@v4
+
+      # 步骤 2: 创建 ZIP 文件
+      # 注意：Chrome 扩展的 zip 文件只需包含 manifest.json 和其他资源文件
+      - name: Create extension zip
+        run: |
+          # 排除 .git 和 .github 文件夹，确保只打包扩展所需的文件
+          # 由于你的扩展文件都在根目录，所以直接打包根目录
+          zip -r calendar-everyday-dist.zip . -x "*.git/*" -x "*.github/*" -x "*/node_modules/*"
+
+      # 步骤 3: 创建 GitHub Release 并上传 ZIP 文件
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          # tag_name 会自动使用触发器的 tag (例如 v1.0.0)
+          files: calendar-everyday-dist.zip # 上传上一步创建的 zip 文件
+          draft: false # 立即发布
+          prerelease: false
